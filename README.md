@@ -27,7 +27,7 @@ This build can:
 - Drag existing objects in top-down mode to move their X/Z placement.
 - Edit existing object/intro position and rotation values, snap moved objects to nearby terrain Y, preserve unused spectral positions, and move spectral positions only when the object already has one.
 - Save either all object edits in a room or only the selected object edit into a new patched `.bin` copy with rebuilt raw CD sector checksums.
-- Warn before saving patches that move special, player/cutscene, stream, or unusually large-offset objects, since some intros may require additional stream/BSP/script table updates.
+- Warn before saving patches that move special, player/cutscene, stream, or unusually large-offset objects, with source-researched notes for known fragile records such as the `raziel` loader anchor used during Underworld startup relocation.
 
 The level editor currently supports existing placement edits. Adding/removing entries and rebuilding terrain tables requires safe table growth and pointer relocation, so those controls are intentionally not enabled yet. Palette/audio candidates can already be identified, exported, changed externally, and patched back when the replacement is exactly the same size.
 

@@ -9,7 +9,7 @@ namespace SoulReaverEditor
         {
             { "campath", "Camera Path / Trigger Path" },
             { "marker", "Placement Marker / Script Marker" },
-            { "raziel", "Raziel Player/Cutscene Control (unsafe to move)" },
+            { "raziel", "Raziel Loader Anchor / Player Start (unsafe to move)" },
             { "soul", "Soul Pickup" },
             { "portal", "Room Portal / Stream Boundary" },
             { "wportal", "Warp Portal / Gate Portal" },
@@ -256,7 +256,7 @@ namespace SoulReaverEditor
             }
             if (clean == "raziel")
             {
-                return "Raziel/player start intros appear to be tied to stream startup, cutscene cameras, and scripts. Even tiny moves can freeze loading, so keep this fixed until companion startup data is mapped.";
+                return "Source research shows the Underworld loader searches the loaded room for the 'raziel' intro, marks it used, then relocates the existing player instance to that intro before connected rooms finish preloading. Moving only this anchor can desync startup cameras, portals, and stream state, so keep it fixed until those companion records are mapped.";
             }
             if (clean == "portal" || clean == "wportal" || clean.StartsWith("cam", StringComparison.OrdinalIgnoreCase))
             {
