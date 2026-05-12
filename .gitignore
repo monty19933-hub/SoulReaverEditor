@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+*.bin
+*.cue
+*.iso
+*.img
+*.mdf
+*.sub
+*.ccd
+*.chd
+*.7z
+*.zip
