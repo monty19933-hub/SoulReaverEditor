@@ -9,7 +9,7 @@ namespace SoulReaverEditor
         {
             { "campath", "Camera Path / Trigger Path" },
             { "marker", "Placement Marker / Script Marker" },
-            { "raziel", "Raziel Start / Player Marker" },
+            { "raziel", "Raziel Player/Cutscene Control (unsafe to move)" },
             { "soul", "Soul Pickup" },
             { "portal", "Room Portal / Stream Boundary" },
             { "wportal", "Warp Portal / Gate Portal" },
@@ -253,6 +253,10 @@ namespace SoulReaverEditor
             if (clean == "splob")
             {
                 return "splob is a spectral blob/effect object. It is not the normal soul pickup; large moves can upset streaming or effect setup.";
+            }
+            if (clean == "raziel")
+            {
+                return "Raziel/player start intros appear to be tied to stream startup, cutscene cameras, and scripts. Even tiny moves can freeze loading, so keep this fixed until companion startup data is mapped.";
             }
             if (clean == "portal" || clean == "wportal" || clean.StartsWith("cam", StringComparison.OrdinalIgnoreCase))
             {
