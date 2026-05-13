@@ -2043,10 +2043,11 @@ namespace SoulReaverEditor
                 int largest = Math.Max(Math.Abs(dx), Math.Max(Math.Abs(dy), Math.Abs(dz)));
                 int radius = Math.Max(1, Math.Abs((int)obj.MaxRad));
                 bool special = string.Equals(ObjectNamer.Normalize(obj.FileName), "splob", StringComparison.OrdinalIgnoreCase);
+                bool streamControl = ObjectNamer.IsStreamControlPlacement(obj.FileName);
                 string note = ObjectNamer.PlacementNote(obj.FileName);
                 string moveSafety = BuildMoveSafetyNote(level, obj);
                 bool largeMove = largest > Math.Max(1024, radius * 4);
-                if (!special && !largeMove && string.IsNullOrEmpty(note) && string.IsNullOrEmpty(moveSafety)) continue;
+                if (!special && !streamControl && !largeMove && string.IsNullOrEmpty(note) && string.IsNullOrEmpty(moveSafety)) continue;
 
                 if (sb.Length == 0)
                 {
@@ -2064,6 +2065,7 @@ namespace SoulReaverEditor
                 sb.Append(", Z ");
                 sb.Append(dz);
                 if (special) sb.Append(" (special spectral/soul effect)");
+                if (streamControl) sb.Append(" (stream/control system object)");
                 if (largeMove) sb.Append(" (large jump vs radius " + radius + ")");
                 sb.AppendLine();
                 if (!string.IsNullOrEmpty(note))

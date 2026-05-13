@@ -28,7 +28,7 @@ This build can:
 - Edit existing object/intro position and rotation values, snap moved objects to nearby terrain Y, preserve unused spectral positions, and move spectral positions only when the object already has one.
 - Show move-safety diagnostics when a moved object is off this room's decoded terrain, far from the nearest terrain Y, or inside/near a portal stream boundary.
 - Save either all object edits in a room or only the selected object edit into a new patched `.bin` copy with rebuilt raw CD sector checksums.
-- Warn before saving patches that move special, player/cutscene, stream, or unusually large-offset objects, with source-researched notes for known fragile records such as the `raziel` loader anchor used during Underworld startup relocation.
+- Warn before saving patches that move special, player/cutscene, warp-gate, stream, or unusually large-offset objects, with source-researched notes for known fragile records such as the `raziel` loader anchor used during Underworld startup relocation.
 
 The level editor currently supports existing placement edits. Adding/removing entries and rebuilding terrain tables requires safe table growth and pointer relocation, so those controls are intentionally not enabled yet. Palette/audio candidates can already be identified, exported, changed externally, and patched back when the replacement is exactly the same size.
 

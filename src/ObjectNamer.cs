@@ -250,6 +250,10 @@ namespace SoulReaverEditor
         public static string PlacementNote(string code)
         {
             string clean = Normalize(code);
+            if (IsWarpGateControl(clean))
+            {
+                return "Warp gates are tied into the streaming system, not just placed art. Source research shows the game tracks warp rooms globally, updates warp room arrays during stream connection, manipulates warp-face instances, and toggles specific BSP pieces for the gate rim/entrance. Moving only this intro can break loading even from another area.";
+            }
             if (clean == "splob")
             {
                 return "splob is a spectral blob/effect object. It is not the normal soul pickup; large moves can upset streaming or effect setup.";
@@ -267,6 +271,25 @@ namespace SoulReaverEditor
                 return "This is a stream/camera/control object. Move it only in tiny test steps until the companion data is fully mapped.";
             }
             return null;
+        }
+
+        public static bool IsStreamControlPlacement(string code)
+        {
+            string clean = Normalize(code);
+            if (IsWarpGateControl(clean)) return true;
+            return clean == "raziel" ||
+                   clean == "portal" ||
+                   clean == "wportal" ||
+                   clean == "marker" ||
+                   clean.StartsWith("cam", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsWarpGateControl(string clean)
+        {
+            return clean == "warpg" ||
+                   clean == "wrpface" ||
+                   clean == "wrpdoor" ||
+                   clean == "wportal";
         }
 
         private sealed class PrefixName
