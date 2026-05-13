@@ -26,6 +26,7 @@ This build can:
 - Render large linked/whole-zone maps with cached terrain edges, per-frame vertex projection, and offscreen culling to reduce lag without dropping level rooms.
 - Drag existing objects in top-down mode to move their X/Z placement.
 - Edit existing object/intro position and rotation values, snap moved objects to nearby terrain Y, preserve unused spectral positions, and move spectral positions only when the object already has one.
+- Show move-safety diagnostics when a moved object is off this room's decoded terrain, far from the nearest terrain Y, or inside/near a portal stream boundary.
 - Save either all object edits in a room or only the selected object edit into a new patched `.bin` copy with rebuilt raw CD sector checksums.
 - Warn before saving patches that move special, player/cutscene, stream, or unusually large-offset objects, with source-researched notes for known fragile records such as the `raziel` loader anchor used during Underworld startup relocation.
 

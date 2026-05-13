@@ -1429,7 +1429,7 @@ namespace SoulReaverEditor
             if (tag == null) return;
             _selectedLevelDocument = tag.Document;
             _levelCanvas.SelectObject(tag.Document, tag.Object.Index);
-            LoadObjectIntoEditors(tag.Object);
+            LoadObjectIntoEditors(tag.Document, tag.Object);
         }
 
         private void SelectLevelObjectFromCanvas()
@@ -1445,7 +1445,7 @@ namespace SoulReaverEditor
                     _levelObjects.SelectedItems.Clear();
                     _levelObjects.Items[i].Selected = true;
                     _levelObjects.Items[i].EnsureVisible();
-                    LoadObjectIntoEditors(tag.Object);
+                    LoadObjectIntoEditors(tag.Document, tag.Object);
                     break;
                 }
             }
@@ -1460,7 +1460,7 @@ namespace SoulReaverEditor
                 LevelObjectTag tag = _levelObjects.SelectedItems[0].Tag as LevelObjectTag;
                 if (tag != null)
                 {
-                    LoadObjectIntoEditors(tag.Object);
+                    LoadObjectIntoEditors(tag.Document, tag.Object);
                     UpdateSelectedLevelObjectListItem(tag.Object);
                     RefreshLevelSummaryText();
                 }
@@ -1469,17 +1469,35 @@ namespace SoulReaverEditor
 
         private void LoadObjectIntoEditors(LevelObjectPlacement obj)
         {
+            LoadObjectIntoEditors(FindDocumentForObject(obj), obj);
+        }
+
+        private void LoadObjectIntoEditors(SR1LevelDocument document, LevelObjectPlacement obj)
+        {
             _objX.Value = ClampNumeric(obj.X, _objX);
             _objY.Value = ClampNumeric(obj.Y, _objY);
             _objZ.Value = ClampNumeric(obj.Z, _objZ);
             _rotX.Value = ClampNumeric(obj.RotationRawX, _rotX);
             _rotY.Value = ClampNumeric(obj.RotationRawY, _rotY);
             _rotZ.Value = ClampNumeric(obj.RotationRawZ, _rotZ);
-            if (_objectDelta != null) _objectDelta.Text = BuildObjectDeltaText(obj);
+            if (_objectDelta != null) _objectDelta.Text = BuildObjectDeltaText(document, obj);
             SetStatus("Selected " + ObjectNamer.DisplayName(obj.FileName) + " id " + obj.UniqueId);
         }
 
-        private static string BuildObjectDeltaText(LevelObjectPlacement obj)
+        private SR1LevelDocument FindDocumentForObject(LevelObjectPlacement obj)
+        {
+            if (obj == null) return null;
+            foreach (SR1LevelDocument doc in _loadedLevels)
+            {
+                foreach (LevelObjectPlacement candidate in doc.Objects)
+                {
+                    if (object.ReferenceEquals(candidate, obj)) return doc;
+                }
+            }
+            return _selectedLevelDocument ?? _currentLevel;
+        }
+
+        private static string BuildObjectDeltaText(SR1LevelDocument document, LevelObjectPlacement obj)
         {
             if (obj == null) return "No object selected.";
             string text = string.Format(
@@ -1502,7 +1520,73 @@ namespace SoulReaverEditor
             {
                 text += Environment.NewLine + Environment.NewLine + "Note: " + note;
             }
+            string moveSafety = BuildMoveSafetyNote(document, obj);
+            if (!string.IsNullOrEmpty(moveSafety))
+            {
+                text += Environment.NewLine + Environment.NewLine + "Move safety: " + moveSafety;
+            }
             return text;
+        }
+
+        private static string BuildMoveSafetyNote(SR1LevelDocument document, LevelObjectPlacement obj)
+        {
+            if (document == null || obj == null || !obj.HasMoved) return null;
+
+            List<string> notes = new List<string>();
+            if (!IsInsideExpandedBounds(document.Bounds, obj.X, obj.Z, 256))
+            {
+                notes.Add("New X/Z is outside this room's decoded terrain/portal bounds. The intro still belongs to this source room, so moving it into another room requires object transfer support instead of an in-place coordinate edit.");
+            }
+
+            short terrainY;
+            if (!TryFindTerrainYAt(document, obj.X, obj.Z, obj.Y, out terrainY))
+            {
+                notes.Add("No terrain triangle was found under the new X/Z in this room. That usually means the object is outside the current stream unit's walkable/collidable space.");
+            }
+            else
+            {
+                int yDelta = obj.Y - terrainY;
+                if (Math.Abs(yDelta) > 512)
+                {
+                    notes.Add("Nearest terrain Y is " + terrainY + " (" + yDelta + " away); use Snap Y or move back over the floor before testing in-game.");
+                }
+            }
+
+            LevelPortal portal = FindNearbyPortal(document, obj.X, obj.Y, obj.Z, 768);
+            if (portal != null)
+            {
+                notes.Add("New position is inside or close to the portal/stream boundary for " + ZoneNamer.DisplayPortalTarget(portal.ToLevelName) + ". Crossing that boundary safely needs the object to belong to the destination room's intro/object tables.");
+            }
+
+            return notes.Count == 0 ? null : string.Join(" ", notes.ToArray());
+        }
+
+        private static bool IsInsideExpandedBounds(RectangleF bounds, short x, short z, int margin)
+        {
+            if (bounds.IsEmpty) return true;
+            return x >= bounds.Left - margin &&
+                   x <= bounds.Right + margin &&
+                   z >= bounds.Top - margin &&
+                   z <= bounds.Bottom + margin;
+        }
+
+        private static LevelPortal FindNearbyPortal(SR1LevelDocument document, short x, short y, short z, int margin)
+        {
+            if (document == null) return null;
+            foreach (LevelPortal portal in document.Portals)
+            {
+                int minX = Math.Min(portal.MinX, portal.MaxX) - margin;
+                int maxX = Math.Max(portal.MinX, portal.MaxX) + margin;
+                int minY = Math.Min(portal.MinY, portal.MaxY) - margin;
+                int maxY = Math.Max(portal.MinY, portal.MaxY) + margin;
+                int minZ = Math.Min(portal.MinZ, portal.MaxZ) - margin;
+                int maxZ = Math.Max(portal.MinZ, portal.MaxZ) + margin;
+                if (x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ)
+                {
+                    return portal;
+                }
+            }
+            return null;
         }
 
         private static decimal ClampNumeric(int value, NumericUpDown numeric)
@@ -1579,7 +1663,7 @@ namespace SoulReaverEditor
             tag.Object.Y = terrainY;
             if (moveSpectral) tag.Object.SpectralY = AddShortDelta(tag.Object.SpectralY, deltaY);
             SR1LevelParser.WriteObjectToRaw(tag.Document, tag.Object);
-            LoadObjectIntoEditors(tag.Object);
+            LoadObjectIntoEditors(tag.Document, tag.Object);
             UpdateSelectedLevelObjectListItem(tag.Object);
             RefreshLevelSummaryText();
             if (_levelCanvas != null)
@@ -1775,7 +1859,7 @@ namespace SoulReaverEditor
 
             tag.Object.ResetToOriginal();
             SR1LevelParser.WriteObjectToRaw(tag.Document, tag.Object);
-            LoadObjectIntoEditors(tag.Object);
+            LoadObjectIntoEditors(tag.Document, tag.Object);
             UpdateSelectedLevelObjectListItem(tag.Object);
             RefreshLevelSummaryText();
             if (_levelCanvas != null)
@@ -1811,7 +1895,7 @@ namespace SoulReaverEditor
                 LevelObjectTag selected = _levelObjects.SelectedItems[0].Tag as LevelObjectTag;
                 if (selected != null)
                 {
-                    LoadObjectIntoEditors(selected.Object);
+                    LoadObjectIntoEditors(selected.Document, selected.Object);
                     UpdateSelectedLevelObjectListItem(selected.Object);
                 }
             }
@@ -1960,8 +2044,9 @@ namespace SoulReaverEditor
                 int radius = Math.Max(1, Math.Abs((int)obj.MaxRad));
                 bool special = string.Equals(ObjectNamer.Normalize(obj.FileName), "splob", StringComparison.OrdinalIgnoreCase);
                 string note = ObjectNamer.PlacementNote(obj.FileName);
+                string moveSafety = BuildMoveSafetyNote(level, obj);
                 bool largeMove = largest > Math.Max(1024, radius * 4);
-                if (!special && !largeMove && string.IsNullOrEmpty(note)) continue;
+                if (!special && !largeMove && string.IsNullOrEmpty(note) && string.IsNullOrEmpty(moveSafety)) continue;
 
                 if (sb.Length == 0)
                 {
@@ -1985,6 +2070,11 @@ namespace SoulReaverEditor
                 {
                     sb.Append("   ");
                     sb.AppendLine(note);
+                }
+                if (!string.IsNullOrEmpty(moveSafety))
+                {
+                    sb.Append("   ");
+                    sb.AppendLine(moveSafety);
                 }
 
                 warningCount++;

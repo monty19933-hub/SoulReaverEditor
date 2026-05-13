@@ -254,6 +254,10 @@ namespace SoulReaverEditor
             {
                 return "splob is a spectral blob/effect object. It is not the normal soul pickup; large moves can upset streaming or effect setup.";
             }
+            if (clean == "soul")
+            {
+                return "The game source lists soul with streamed monster objects. Keep it on terrain inside its original room until object transfer/add-remove support can move the intro into another room safely.";
+            }
             if (clean == "raziel")
             {
                 return "Source research shows the Underworld loader searches the loaded room for the 'raziel' intro, marks it used, then relocates the existing player instance to that intro before connected rooms finish preloading. Moving only this anchor can desync startup cameras, portals, and stream state, so keep it fixed until those companion records are mapped.";
